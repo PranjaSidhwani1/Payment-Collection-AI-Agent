@@ -26,6 +26,7 @@ MAX_ACCOUNT_LOOKUP_ATTEMPTS = 3
 MAX_VERIFICATION_ATTEMPTS = 3
 MAX_PAYMENT_ATTEMPTS = 3
 MAX_EXTRACTION_FAILURES = 3
+MAX_AMOUNT_ATTEMPTS = 3
 
 
 @dataclass
@@ -69,6 +70,7 @@ class ConversationState:
     account_lookup_attempts: int = 0
     verify_attempts: int = 0
     payment_attempts: int = 0
+    amount_attempts: int = 0
     extraction_failure_streak: int = 0
 
     closed: bool = False

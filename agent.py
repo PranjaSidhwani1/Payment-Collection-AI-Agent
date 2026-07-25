@@ -30,6 +30,7 @@ import verification
 from extractor import ExtractionUnavailable, extract
 from state import (
     MAX_ACCOUNT_LOOKUP_ATTEMPTS,
+    MAX_AMOUNT_ATTEMPTS,
     MAX_EXTRACTION_FAILURES,
     MAX_PAYMENT_ATTEMPTS,
     MAX_VERIFICATION_ATTEMPTS,
@@ -273,8 +274,49 @@ class Agent:
         slots.amount = None
         slots.pay_in_full = False
         if not ok:
-            return _HandlerResult(responses.invalid_amount(reason, balance))
+            self.state.amount_attempts += 1
+            # region agent log
+            try:
+                import json as _json
+                import time as _time
+                with open("debug-409557.log", "a") as _f:
+                    _f.write(_json.dumps({
+                        "sessionId": "409557", "runId": "post-fix",
+                        "hypothesisId": "A", "location": "agent.py:_handle_amount",
+                        "message": "invalid amount attempt",
+                        "data": {"reason": reason, "attempts": self.state.amount_attempts,
+                                 "cap": MAX_AMOUNT_ATTEMPTS, "closed": self.state.amount_attempts >= MAX_AMOUNT_ATTEMPTS},
+                        "timestamp": int(_time.time() * 1000),
+                    }) + "\n")
+            except Exception:
+                pass
+            # endregion agent log
+            if self.state.amount_attempts >= MAX_AMOUNT_ATTEMPTS:
+                self._close(responses.amount_exhausted(), outcome="amount_failed")
+                return _HandlerResult(responses.amount_exhausted())
+            attempts_left = MAX_AMOUNT_ATTEMPTS - self.state.amount_attempts
+            return _HandlerResult(responses.invalid_amount(reason, balance, attempts_left))
 
+        # Reset here (not just on init) because this stage can be re-entered
+        # later via the insufficient-balance path in _handle_card_details -
+        # each fresh round of amount entry should get its own 3 attempts,
+        # separate from the overall payment_attempts budget.
+        self.state.amount_attempts = 0
+        # region agent log
+        try:
+            import json as _json
+            import time as _time
+            with open("debug-409557.log", "a") as _f:
+                _f.write(_json.dumps({
+                    "sessionId": "409557", "runId": "post-fix",
+                    "hypothesisId": "B", "location": "agent.py:_handle_amount",
+                    "message": "valid amount accepted, amount_attempts reset",
+                    "data": {"candidate": candidate, "amount_attempts_after_reset": self.state.amount_attempts},
+                    "timestamp": int(_time.time() * 1000),
+                }) + "\n")
+        except Exception:
+            pass
+        # endregion agent log
         self.state.validated_amount = validators.normalize_amount(candidate)
         self.state.stage = Stage.AWAITING_CARD_DETAILS
         return _HandlerResult(None, advance=True)

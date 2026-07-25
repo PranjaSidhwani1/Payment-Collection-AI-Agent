@@ -94,17 +94,27 @@ def ask_amount() -> str:
     )
 
 
-def invalid_amount(reason: str, balance: float) -> str:
+def invalid_amount(reason: str, balance: float, attempts_left: int) -> str:
     if reason == "exceeds_balance":
-        return (
+        base = (
             f"That amount is more than your outstanding balance of "
             f"{format_currency(balance)}. How much would you like to pay?"
         )
-    if reason == "too_many_decimals":
-        return "Amounts can have at most 2 decimal places. How much would you like to pay?"
-    if reason == "not_positive":
-        return "The payment amount needs to be greater than zero. How much would you like to pay?"
-    return "I couldn't quite understand that amount. How much would you like to pay?"
+    elif reason == "too_many_decimals":
+        base = "Amounts can have at most 2 decimal places. How much would you like to pay?"
+    elif reason == "not_positive":
+        base = "The payment amount needs to be greater than zero. How much would you like to pay?"
+    else:
+        base = "I couldn't quite understand that amount. How much would you like to pay?"
+    return f"{base} ({attempts_left} attempt(s) left.)"
+
+
+def amount_exhausted() -> str:
+    return (
+        "I'm unable to get a valid payment amount after multiple attempts, so "
+        "I can't proceed with this request. Please contact support for "
+        "assistance."
+    )
 
 
 def ask_card_details(missing_fields: list) -> str:
@@ -189,6 +199,7 @@ def session_ended(outcome: str) -> str:
         "success": "Your payment was already completed",
         "verification_failed": "This session ended because identity verification failed",
         "account_not_found": "This session ended because the account could not be found",
+        "amount_failed": "This session ended because a valid payment amount could not be provided",
         "payment_failed": "This session ended because the payment could not be completed",
         "cancelled": "This session was cancelled",
         "system_error": "This session ended due to a technical issue",
