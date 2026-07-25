@@ -124,10 +124,17 @@ class Agent:
             slots.pay_in_full = True
             slots.amount = None
 
-        for field in ("card_number", "cvv", "cardholder_name"):
+        for field in ("card_number", "cvv"):
             value = extracted.get(field)
             if value:
                 setattr(slots, field, value)
+        # cardholder_name is deliberately only ever captured post-verification
+        # as a deterministic safety net: pre-verification, "Nithin Jain" must
+        # always be interpreted as full_name, never speculatively locked in
+        # as a card detail, even if the LLM's ask-context disambiguation
+        # (see extractor.py) were ever to get this wrong.
+        if self.state.verified and extracted.get("cardholder_name"):
+            slots.cardholder_name = extracted["cardholder_name"]
         if extracted.get("expiry_month") is not None:
             slots.expiry_month = extracted["expiry_month"]
         if extracted.get("expiry_year") is not None:

@@ -94,3 +94,25 @@ class ConversationState:
         if not self.slots.cardholder_name:
             missing.append("cardholder name")
         return missing
+
+    def current_ask_description(self) -> str:
+        """Human-readable description of what the agent just asked the user
+        for, given to the extractor as disambiguation context. This is what
+        lets a bare reply like "Nithin Jain" be correctly attributed to
+        cardholder_name instead of full_name when that's what's pending,
+        even though full_name is already known.
+        """
+        if self.stage == Stage.AWAITING_ACCOUNT_ID:
+            return "their account ID"
+        if self.stage == Stage.AWAITING_NAME:
+            return "their full legal name (full_name)"
+        if self.stage == Stage.AWAITING_SECONDARY_FACTOR:
+            return "their date of birth, Aadhaar last 4 digits, or pincode, to verify identity"
+        if self.stage == Stage.AWAITING_AMOUNT:
+            return "how much they want to pay (amount, or whether to pay in full)"
+        if self.stage == Stage.AWAITING_CARD_DETAILS:
+            missing = self.missing_card_fields()
+            if missing:
+                return "the following still-missing card detail(s): " + ", ".join(missing)
+            return "confirmation of their card details"
+        return "nothing - the conversation has ended"

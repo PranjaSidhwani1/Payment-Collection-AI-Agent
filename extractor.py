@@ -110,6 +110,12 @@ summary of what is already known, and return a single JSON object matching
 the given schema.
 
 Rules:
+- You will be told what the agent just asked the user for. Use that to
+  disambiguate: e.g. if the agent asked for the cardholder name and the
+  user replies with just a name, put it in cardholder_name - even if an
+  identical-looking value is already known under a different field (like
+  full_name). A bare short reply almost always answers the question that
+  was just asked.
 - Only extract information the user actually stated in THIS message. Do not
   carry over or re-state values already listed as "already known" - leave
   those fields null unless the user is explicitly changing/correcting them
@@ -174,6 +180,7 @@ def extract(user_input: str, state, max_retries: int = 2) -> dict:
     client = _client()
 
     user_prompt = (
+        f"The agent just asked the user for: {state.current_ask_description()}\n\n"
         f"Already known (do not re-extract unless the user is correcting it): "
         f"{_known_slots_summary(state)}\n\n"
         f"Latest user message:\n{user_input}"
