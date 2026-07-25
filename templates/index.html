@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Payment Collection Agent</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="header-title">
+        <span class="status-dot" id="status-dot"></span>
+        <div>
+          <div class="title">Payment Collection Agent</div>
+          <div class="subtitle" id="subtitle">Connecting...</div>
+        </div>
+      </div>
+      <button id="reset-btn" class="reset-btn" type="button">New chat</button>
+    </header>
+
+    <main id="chat-window" class="chat-window" aria-live="polite"></main>
+
+    <div id="typing-indicator" class="typing-row hidden">
+      <div class="bubble agent typing">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </div>
+    </div>
+
+    <footer class="composer">
+      <input
+        id="message-input"
+        class="message-input"
+        type="text"
+        placeholder="Type your message..."
+        autocomplete="off"
+        disabled
+      />
+      <button id="send-btn" class="send-btn" type="button" disabled>Send</button>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+</body>
+</html>
