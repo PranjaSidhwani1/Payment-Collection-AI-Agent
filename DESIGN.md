@@ -70,6 +70,8 @@ Two complementary layers, per the requirement to test happy path, verification f
 
 ## 6. What I'd Improve With More Time
 
+
+- Replace the hosted Groq call with a small local fine-tuned LLM for extraction. The slot-extraction task itself isn't very complex (fixed schema, short input, narrow domain), so a small model fine-tuned specifically on this schema/task could match accuracy while running locally cutting both per-turn latency (no network round-trip) and ongoing inference cost (no per-token API billing), and removing the agent's availability coupling to a third-party provider entirely.
 - Add a small persistence layer (even just serializing `ConversationState`) so a session could survive a process restart — currently state is purely in-memory for the lifetime of one `Agent` instance, which matches the required interface but wouldn't survive a real deployment restart.
 - Expand the eval harness with adversarial/fuzz-style cases (deliberately contradictory information, rapid topic switching, attempted prompt injection through user input into the extractor) to pressure-test the deterministic guardrails further.
 - Track and expose lightweight per-session metrics (turns taken, retries used, extraction latency) from the `Agent` itself, so a real deployment could monitor these without needing the external eval harness.
